@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/qodm" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
