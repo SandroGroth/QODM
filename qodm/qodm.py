@@ -23,7 +23,7 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QFileDialog
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -43,6 +43,7 @@ class QODM:
             application at run time.
         :type iface: QgsInterface
         """
+        self.dlg = QODMDialog()
         # Save reference to the QGIS interface
         self.iface = iface
         # initialize plugin directory
@@ -170,6 +171,55 @@ class QODM:
         # will be set False in run()
         self.first_start = True
 
+        self.dlg.tb_projdir.clicked.connect(self.selectProjPath)
+
+    def selectProjPath(self):
+        """Selects an UAV image directory with an open directory dialog"""
+
+        in_dir = str(QFileDialog.getExistingDirectory(
+            caption = 'Project Directory: ',
+            directory = os.getcwd()
+        ))
+
+        self.setProjDirectoryLine(in_dir)
+
+    def setProjDirectoryLine(self, text):
+        self.dlg.le_projdir.setText(text)
+
+    def getProjPath(self):
+        return self.dlg.le_projdir.text()
+
+    def getOutProdOrthophoto(self):
+        return self.dlg.ch_orthophoto.isChecked()
+
+    def getOutProdDTM(self):
+        return self.dlg.ch_dtm.isChecked()
+
+    def getOutProdDSM(self):
+        return self.dlg.ch_dsm.isChecked()
+
+    def getOutProd3DM(self):
+        return self.dlg.ch_3dm.isChecked()
+
+    def setVariables(self):
+        self.projPath = self.getProjPath()
+
+        self.outProdOrthophoto = self.getOutProdOrthophoto()
+        self.outProdDTM = self.getOutProdDTM()
+        self.outProdDSM = self.getOutProdDSM()
+        self.outProd3DM = self.getOutProd3DM()
+
+    def getDockerPath(self):
+        pass
+    
+    def isDockerValid(self):
+        pass
+
+    def isDockerToolbox(self):
+        pass
+    
+    def execute(self):
+        pass
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -183,18 +233,11 @@ class QODM:
     def run(self):
         """Run method that performs all the real work"""
 
-        # Create the dialog with elements (after translation) and keep reference
-        # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-        if self.first_start == True:
-            self.first_start = False
-            self.dlg = QODMDialog()
-
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            pass
+            self.setVariables()
+            self.execute()
