@@ -21,15 +21,24 @@
  *                                                                         *
  ***************************************************************************/
 """
+from qgis.core import Qgis
+
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QFileDialog
+from qgis.PyQt.QtWidgets import QAction, QFileDialog 
+
+from qgis.gui import QgsMessageBar
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
 from .qodm_dialog import QODMDialog
+
 import os.path
+import os
+import shutil
+import subprocess
+import platform
 
 
 class QODM:
@@ -67,6 +76,16 @@ class QODM:
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
+
+        # init user settings
+        self.proj_path = None
+        self.docker_path = None
+        self.docker_toolbox = None
+
+        self.out_prod_orthophoto = None
+        self.out_prod_DTM = None
+        self.out_prod_DSM = None
+        self.out_prod_3DM = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -171,9 +190,9 @@ class QODM:
         # will be set False in run()
         self.first_start = True
 
-        self.dlg.tb_projdir.clicked.connect(self.selectProjPath)
+        self.dlg.tb_projdir.clicked.connect(self.select_proj_path)
 
-    def selectProjPath(self):
+    def select_proj_path(self):
         """Selects an UAV image directory with an open directory dialog"""
 
         in_dir = str(QFileDialog.getExistingDirectory(
@@ -181,45 +200,81 @@ class QODM:
             directory = os.getcwd()
         ))
 
-        self.setProjDirectoryLine(in_dir)
+        self.set_proj_directory_line(in_dir)
 
-    def setProjDirectoryLine(self, text):
+    def set_proj_directory_line(self, text):
         self.dlg.le_projdir.setText(text)
 
-    def getProjPath(self):
+    def get_proj_path(self):
         return self.dlg.le_projdir.text()
 
-    def getOutProdOrthophoto(self):
+    def get_out_prod_orthophoto(self):
         return self.dlg.ch_orthophoto.isChecked()
 
-    def getOutProdDTM(self):
+    def get_out_prod_DTM(self):
         return self.dlg.ch_dtm.isChecked()
 
-    def getOutProdDSM(self):
+    def get_out_prod_DSM(self):
         return self.dlg.ch_dsm.isChecked()
 
-    def getOutProd3DM(self):
+    def get_out_prod_3DM(self):
         return self.dlg.ch_3dm.isChecked()
-
-    def setVariables(self):
-        self.projPath = self.getProjPath()
-
-        self.outProdOrthophoto = self.getOutProdOrthophoto()
-        self.outProdDTM = self.getOutProdDTM()
-        self.outProdDSM = self.getOutProdDSM()
-        self.outProd3DM = self.getOutProd3DM()
-
-    def getDockerPath(self):
-        pass
     
-    def isDockerValid(self):
-        pass
+    def get_docker_path(self):
+        docker_path = None
+        try:
+            docker_path = os.environ['DOCKER_PATH']
+        except KeyError:
+            self.iface.messageBar().pushMessage("Warning", "No docker installation specified in settings. Searching for docker in PATH.", level=Qgis.Warning)
+            if platform.system() == 'Windows':
+                try:
+                    docker_path = os.environ['DOCKER_TOOLBOX_INSTALL_PATH']
+                except KeyError:
+                    try:
+                        docker_path = os.environ['DOCKER_INSTALL_PATH'] #TODO: Check name of full docker installation variable
+                    except KeyError:
+                        pass
+            if platform.system() == 'Linux':
+                pass #TODO: Check how docker is installed on Unix systems
+            if platform.system() == 'MacOS':
+                pass #TODO: Check how docker is installed on MacOS systems
+        finally:
+            if not docker_path:
+                self.iface.messageBar().pushMessage("Error", "No docker installation found. Make sure docker is properly installed and available in PATH.", level=Qgis.Critical)
+                raise FileNotFoundError('No docker installation found. Make sure docker is properly installed and available in PATH.')
+        
+        return docker_path
 
-    def isDockerToolbox(self):
-        pass
+    def is_docker_toolbox(self):
+        is_toolbox = None
+        if platform.system() == 'Windows':
+            try:
+                if os.environ['DOCKER_TOOLBOX'] == 'TRUE':
+                    is_toolbox = True
+                elif os.environ['DOCKER_TOOLBOX'] == 'FALSE':
+                    is_toolbox = False
+            except KeyError:
+                try:
+                    os.environ['DOCKER_TOOLBOX_INSTALL_PATH']
+                    is_toolbox = True
+                except KeyError:
+                    is_toolbox = False
+        
+        return is_toolbox
+
+    def set_variables(self):
+        self.proj_path = self.get_proj_path()
+        self.docker_path = self.get_docker_path()
+        self.docker_toolbox = self.is_docker_toolbox()
+
+        self.out_prod_orthophoto = self.get_out_prod_orthophoto()
+        self.out_prod_DTM = self.get_out_prod_DTM()
+        self.out_prod_DSM = self.get_out_prod_DSM()
+        self.out_prod_3DM = self.get_out_prod_3DM()
     
     def execute(self):
-        pass
+        self.iface.messageBar().pushMessage("Info", "Docker found in {}".format(self.docker_path), level=Qgis.Info)
+        self.iface.messageBar().pushMessage("Info", "Is Docker Toolbox: {}".format(self.docker_toolbox), level=Qgis.Info)
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -228,7 +283,6 @@ class QODM:
                 self.tr(u'&QODM'),
                 action)
             self.iface.removeToolBarIcon(action)
-
 
     def run(self):
         """Run method that performs all the real work"""
@@ -239,5 +293,5 @@ class QODM:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            self.setVariables()
+            self.set_variables()
             self.execute()
