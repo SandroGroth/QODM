@@ -21,11 +21,17 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.core import Qgis
+import os.path
+import os
+import subprocess
+import shlex
+import platform
+
+from qgis.core import Qgis, QgsMessageLog
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QFileDialog 
+from qgis.PyQt.QtWidgets import QAction
 
 from qgis.gui import QgsMessageBar
 
@@ -33,13 +39,6 @@ from qgis.gui import QgsMessageBar
 from .resources import *
 # Import the code for the dialog
 from .qodm_dialog import QODMDialog
-
-import os.path
-import os
-import shutil
-import subprocess
-import platform
-
 
 class QODM:
     """QGIS Plugin Implementation."""
@@ -77,10 +76,21 @@ class QODM:
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
 
+        # check if docker package is available
+        try:
+            import docker
+        except:
+            self.iface.messageBar().pushMessage("Error", "dockerpy not found. Install it using pip install docker.", level=Qgis.Error)
+            exit()
+
         # init user settings
         self.proj_path = None
         self.docker_path = None
         self.docker_toolbox = None
+        self.docker_mount = '/datasets/code'
+        self.docker_img = 'opendronemap/odm'
+        self.docker_proj_path = '/datasets'
+        self.docker_executable = r'\docker.exe' #TODO: Adjust for other platforms
 
         self.out_prod_orthophoto = None
         self.out_prod_DTM = None
@@ -192,12 +202,28 @@ class QODM:
 
         self.dlg.tb_projdir.clicked.connect(self.select_proj_path)
 
+    def run_command(self, command):
+        """Runs command in command prompt and logs the output.
+        Code found on: https://www.endpoint.com/blog/2015/01/28/getting-realtime-output-using-python
+        """
+        process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, text=True)
+        QgsMessageLog.logMessage("Commandline process started...", tag='QODM', level=Qgis.Info)
+        while True:
+            output = process.stdout.readline()
+            if output == '' and process.poll() is not None:
+                QgsMessageLog.logMessage("Commandline Process terminated.", tag='QODM', level=Qgis.Info)
+                break
+            if output:
+                QgsMessageLog.logMessage(output.strip(), tag='QODM', level=Qgis.Info)
+        rc = process.poll()
+        return rc
+    
     def select_proj_path(self):
         """Selects an UAV image directory with an open directory dialog"""
 
         in_dir = str(QFileDialog.getExistingDirectory(
-            caption = 'Project Directory: ',
-            directory = os.getcwd()
+            caption='Project Directory: ',
+            directory=os.getcwd()
         ))
 
         self.set_proj_directory_line(in_dir)
@@ -219,62 +245,50 @@ class QODM:
 
     def get_out_prod_3DM(self):
         return self.dlg.ch_3dm.isChecked()
-    
-    def get_docker_path(self):
-        docker_path = None
-        try:
-            docker_path = os.environ['DOCKER_PATH']
-        except KeyError:
-            self.iface.messageBar().pushMessage("Warning", "No docker installation specified in settings. Searching for docker in PATH.", level=Qgis.Warning)
-            if platform.system() == 'Windows':
-                try:
-                    docker_path = os.environ['DOCKER_TOOLBOX_INSTALL_PATH']
-                except KeyError:
-                    try:
-                        docker_path = os.environ['DOCKER_INSTALL_PATH'] #TODO: Check name of full docker installation variable
-                    except KeyError:
-                        pass
-            if platform.system() == 'Linux':
-                pass #TODO: Check how docker is installed on Unix systems
-            if platform.system() == 'MacOS':
-                pass #TODO: Check how docker is installed on MacOS systems
-        finally:
-            if not docker_path:
-                self.iface.messageBar().pushMessage("Error", "No docker installation found. Make sure docker is properly installed and available in PATH.", level=Qgis.Critical)
-                raise FileNotFoundError('No docker installation found. Make sure docker is properly installed and available in PATH.')
-        
-        return docker_path
 
-    def is_docker_toolbox(self):
-        is_toolbox = None
-        if platform.system() == 'Windows':
-            try:
-                if os.environ['DOCKER_TOOLBOX'] == 'TRUE':
-                    is_toolbox = True
-                elif os.environ['DOCKER_TOOLBOX'] == 'FALSE':
-                    is_toolbox = False
-            except KeyError:
-                try:
-                    os.environ['DOCKER_TOOLBOX_INSTALL_PATH']
-                    is_toolbox = True
-                except KeyError:
-                    is_toolbox = False
-        
-        return is_toolbox
+    def docker_available(self):
+        # execute docker --version to check if docker is running
+        try:
+            self.run_command('docker --version')
+        except Exception as e: 
+            self.iface.messageBar().pushMessage(e, level=Qgis.Info)
 
     def set_variables(self):
         self.proj_path = self.get_proj_path()
-        self.docker_path = self.get_docker_path()
-        self.docker_toolbox = self.is_docker_toolbox()
 
         self.out_prod_orthophoto = self.get_out_prod_orthophoto()
         self.out_prod_DTM = self.get_out_prod_DTM()
         self.out_prod_DSM = self.get_out_prod_DSM()
         self.out_prod_3DM = self.get_out_prod_3DM()
+
+    def add_VM_mountpoint(self):
+        pass
+
+    def build_command(self):
+        # init
+        cmd = 'docker run'
+        args = ' -ti --rm -v'
+        options = ' --project-path ' + self.docker_proj_path
+
+        # add project mount
+        args = args + ' ' + self.proj_path + ':' + self.docker_mount
+
+        # add docker image
+        args = args + ' ' + self.docker_img
+
+        # add output product options
+        if self.out_prod_DTM:
+            options = options + ' --dtm'
+        if self.out_prod_DSM:
+            options = options + ' --dsm'
+
+        return cmd + args + options
+
     
     def execute(self):
-        self.iface.messageBar().pushMessage("Info", "Docker found in {}".format(self.docker_path), level=Qgis.Info)
-        self.iface.messageBar().pushMessage("Info", "Is Docker Toolbox: {}".format(self.docker_toolbox), level=Qgis.Info)
+        full_command = self.build_command()
+        QgsMessageLog.logMessage('Using command: {}'.format(full_command), tag='QODM', level=Qgis.Info)
+        # execute full command
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -293,5 +307,7 @@ class QODM:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
+            QgsMessageLog.logMessage("OK pressed.", tag='QODM', level=Qgis.Info)
+            self.docker_available()
             self.set_variables()
             self.execute()
