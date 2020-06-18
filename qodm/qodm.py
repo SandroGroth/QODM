@@ -27,13 +27,13 @@ import subprocess
 import shlex
 import platform
 
-from qgis.core import Qgis, QgsMessageLog
+from qgis.core import Qgis, QgsMessageLog, QgsMapLayer, QgsProject
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QFileDialog
 
-from qgis.gui import QgsMessageBar
+from qgis.gui import QgsMessageBar, QgsProjectionSelectionDialog
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -96,6 +96,8 @@ class QODM:
         self.out_prod_DTM = None
         self.out_prod_DSM = None
         self.out_prod_3DM = None
+
+        self.out_crs_proj4 = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -201,6 +203,8 @@ class QODM:
         self.first_start = True
 
         self.dlg.tb_projdir.clicked.connect(self.select_proj_path)
+        self.dlg.tb_gcppath.clicked.connect(self.select_gcp_path)
+        self.dlg.tb_outcrs.clicked.connect(self.select_out_CRS)
 
     def run_command(self, command):
         """Runs command in command prompt and logs the output.
@@ -217,7 +221,7 @@ class QODM:
                 QgsMessageLog.logMessage(output.strip(), tag='QODM', level=Qgis.Info)
         rc = process.poll()
         return rc
-    
+
     def select_proj_path(self):
         """Selects an UAV image directory with an open directory dialog"""
 
@@ -234,6 +238,20 @@ class QODM:
     def get_proj_path(self):
         return self.dlg.le_projdir.text()
 
+    def set_gcp_file_line(self, text):
+        self.dlg.le_gcpdir.setText(text)
+
+    def select_gcp_path(self):
+        in_file = str(QFileDialog.getOpenFileName(
+            caption='Ground Control Points: ',
+            filter="Text files (*.txt)"
+        )[0])
+
+        self.set_gcp_file_line(in_file)
+
+    def get_gcp_path(self):
+        return self.dlg.le_gcpdir.text()
+
     def get_out_prod_orthophoto(self):
         return self.dlg.ch_orthophoto.isChecked()
 
@@ -245,6 +263,20 @@ class QODM:
 
     def get_out_prod_3DM(self):
         return self.dlg.ch_3dm.isChecked()
+
+    def set_out_crs_line(self, text):
+        self.dlg.le_outcrs.setText(text)
+
+    def select_out_CRS(self):
+        crs_diag = QgsProjectionSelectionDialog()
+        crs_diag.exec_()
+        out_crs = crs_diag.crs()
+        out_proj4 = out_crs.toProj4()
+
+        self.set_out_crs_line(out_proj4)
+
+    def get_out_crs(self):
+        return self.dlg.le_outcrs.text()
 
     def docker_available(self):
         # execute docker --version to check if docker is running
@@ -260,6 +292,8 @@ class QODM:
         self.out_prod_DTM = self.get_out_prod_DTM()
         self.out_prod_DSM = self.get_out_prod_DSM()
         self.out_prod_3DM = self.get_out_prod_3DM()
+
+        self.out_crs_proj4 = self.get_out_crs()
 
     def add_VM_mountpoint(self):
         pass
@@ -289,6 +323,9 @@ class QODM:
         full_command = self.build_command()
         QgsMessageLog.logMessage('Using command: {}'.format(full_command), tag='QODM', level=Qgis.Info)
         # execute full command
+        os.system('docker run -ti --rm -v C:\\Projects\\HIWI\\UAV_Preprocessing\\Data\\LP_23_boreal_highway184:/datasets/code opendronemap/odm --project-path /datasets')#, stdout=subprocess.PIPE, shell=True, text=True)
+        #(output, err) = p.communicate()
+        QgsMessageLog.logMessage('Process terminated.', tag='QODM', level=Qgis.Info)
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""

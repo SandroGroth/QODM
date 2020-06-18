@@ -87,30 +87,20 @@
       </rect>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBox">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>90</y>
-       <width>551</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
        <x>24</x>
        <y>70</y>
-       <width>351</width>
+       <width>191</width>
        <height>16</height>
       </rect>
      </property>
      <property name="text">
-      <string>Ground Control Points (optional, not supported yet)</string>
+      <string>Ground Control Points (optional)</string>
      </property>
     </widget>
-    <widget class="QToolButton" name="toolButton_3">
+    <widget class="QToolButton" name="tb_gcppath">
      <property name="geometry">
       <rect>
        <x>580</x>
@@ -228,7 +218,7 @@
       <rect>
        <x>24</x>
        <y>250</y>
-       <width>161</width>
+       <width>221</width>
        <height>16</height>
       </rect>
      </property>
@@ -236,20 +226,10 @@
       <enum>QFrame::NoFrame</enum>
      </property>
      <property name="text">
-      <string>Output Coordinate System</string>
+      <string>Output Coordinate System (PROJ4)</string>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBox_2">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>270</y>
-       <width>551</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QToolButton" name="toolButton">
+    <widget class="QToolButton" name="tb_outcrs">
      <property name="geometry">
       <rect>
        <x>580</x>
@@ -260,6 +240,26 @@
      </property>
      <property name="text">
       <string>...</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="le_gcpdir">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>90</y>
+       <width>551</width>
+       <height>22</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="le_outcrs">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>270</y>
+       <width>551</width>
+       <height>22</height>
+      </rect>
      </property>
     </widget>
    </widget>
