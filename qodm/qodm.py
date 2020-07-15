@@ -83,7 +83,9 @@ class QODM:
             self.iface.messageBar().pushMessage("Error", "dockerpy not found. Install it using pip install docker.", level=Qgis.Error)
             exit()
 
-        # init user settings
+        # --- init user settings ----
+
+        # Basic
         self.proj_path = None
         self.docker_path = None
         self.docker_toolbox = None
@@ -98,6 +100,20 @@ class QODM:
         self.out_prod_3DM = None
 
         self.out_crs_proj4 = None
+
+        # Advanced
+        self.orthophoto_resolution = None
+        self.orthophoto_compression = None
+        self.orthophoto_bigtiff = None
+        self.orthophoto_fast = None
+        self.orthophoto_not_tiled = None
+        self.orthophoto_build_overview = None
+        self.orthophoto_use_3d_mesh = None
+
+        self.dem_gapfill_steps = None
+        self.dem_resolution = None
+        self.dem_decimation = None
+        self.dem_euclidian_map = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
