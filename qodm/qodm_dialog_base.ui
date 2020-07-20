@@ -286,7 +286,7 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>0</y>
+        <y>-267</y>
         <width>604</width>
         <height>756</height>
        </rect>
@@ -380,7 +380,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="spinBox"/>
+           <widget class="QSpinBox" name="int_dem_gapfill_steps"/>
           </item>
           <item>
            <widget class="QLabel" name="label_9">
@@ -390,7 +390,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QDoubleSpinBox" name="doubleSpinBox_2"/>
+           <widget class="QDoubleSpinBox" name="dbl_dem_resolution"/>
           </item>
           <item>
            <widget class="QLabel" name="label_10">
@@ -400,10 +400,10 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="spinBox_2"/>
+           <widget class="QSpinBox" name="int_dem_decimation"/>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_7">
+           <widget class="QCheckBox" name="ch_dem_euclidian_map">
             <property name="text">
              <string>Euclidian map</string>
             </property>

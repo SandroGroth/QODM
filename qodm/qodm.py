@@ -220,9 +220,13 @@ class QODM:
         self.clear_gui()
         
         # populate GUI with default values
-        self.orthophoto_resolution.setValue(5)
+        self.dlg.dbl_orthophoto_resolution.setValue(5.0)
         self.dlg.cb_orthophoto_compression.addItems(["DEFLATE", "PEG", "LZW", "PACKBITS", "LZMA", "NONE"])
         self.dlg.cb_orthophoto_bigtiff.addItems(["IF_SAFER", "YES", "NO", "IF_NEEDED"])
+
+        self.dlg.int_dem_gapfill_steps.setValue(3)
+        self.dlg.dbl_dem_resolution.setValue(5.0)
+        self.dlg.int_dem_decimation.setValue(1)
 
         self.dlg.tb_projdir.clicked.connect(self.select_proj_path)
         self.dlg.tb_gcppath.clicked.connect(self.select_gcp_path)
@@ -324,6 +328,18 @@ class QODM:
     def get_orthophoto_use_3d_mesh(self):
         return self.dlg.ch_orthophoto_use_ed_mesh.isChecked()
 
+    def get_dem_gapfill_steps(self):
+        return self.dlg.int_dem_gapfill_steps.value()
+
+    def get_dem_resolution(self):
+        return self.dlg.dbl_dem_resolution.value()
+
+    def get_dem_decimation(self):
+        return self.dlg.int_dem_decimation.value()
+
+    def get_dem_euclidian_map(self):
+        return self.dlg.ch_dem_euclidian_map.isChecked()
+
     def docker_available(self):
         # execute docker --version to check if docker is running
         try:
@@ -349,6 +365,11 @@ class QODM:
         self.orthophoto_cutline = self.get_orthophoto_cutline()
         self.orthophoto_build_overview = self.get_orthophoto_build_overview()
         self.orthophoto_use_3d_mesh = self.get_orthophoto_use_3d_mesh()
+
+        self.dem_gapfill_steps = self.get_dem_gapfill_steps()
+        self.dem_resolution = self.get_dem_resolution()
+        self.dem_decimation = self.get_dem_decimation()
+        self.dem_euclidian_map = self.get_dem_euclidian_map()
 
     def build_command(self):
         # init
