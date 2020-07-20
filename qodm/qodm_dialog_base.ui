@@ -286,9 +286,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-251</y>
-        <width>608</width>
-        <height>604</height>
+        <y>0</y>
+        <width>604</width>
+        <height>756</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -306,7 +306,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+           <widget class="QDoubleSpinBox" name="dbl_orthophoto_resolution"/>
           </item>
           <item>
            <widget class="QLabel" name="label_6">
@@ -316,7 +316,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox"/>
+           <widget class="QComboBox" name="cb_orthophoto_compression"/>
           </item>
           <item>
            <widget class="QLabel" name="label_7">
@@ -326,38 +326,38 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox_2"/>
+           <widget class="QComboBox" name="cb_orthophoto_bigtiff"/>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox">
+           <widget class="QCheckBox" name="ch_orthophoto_fast">
             <property name="text">
              <string>Fast orthophoto</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_2">
+           <widget class="QCheckBox" name="ch_orthophoto_not_tiled">
             <property name="text">
              <string>Not tiled</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_3">
+           <widget class="QCheckBox" name="ch_orthophoto_cutline">
             <property name="text">
              <string>Cutline</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_4">
+           <widget class="QCheckBox" name="ch_orthophoto_build_overview">
             <property name="text">
              <string>Build overview</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_6">
+           <widget class="QCheckBox" name="ch_orthophoto_use_3d_mesh">
             <property name="text">
              <string>Use 3D mesh</string>
             </property>
@@ -426,6 +426,16 @@
           <string>3D-Mesh</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Additional Parameters</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="textEdit"/>
        </item>
       </layout>
      </widget>

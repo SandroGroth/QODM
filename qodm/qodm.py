@@ -76,13 +76,6 @@ class QODM:
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
 
-        # check if docker package is available
-        try:
-            import docker
-        except:
-            self.iface.messageBar().pushMessage("Error", "dockerpy not found. Install it using pip install docker.", level=Qgis.Error)
-            exit()
-
         # --- init user settings ----
 
         # Basic
@@ -107,6 +100,7 @@ class QODM:
         self.orthophoto_bigtiff = None
         self.orthophoto_fast = None
         self.orthophoto_not_tiled = None
+        self.orthophoto_cutline = None
         self.orthophoto_build_overview = None
         self.orthophoto_use_3d_mesh = None
 
@@ -205,6 +199,10 @@ class QODM:
 
         return action
 
+    def clear_gui(self):
+        self.dlg.cb_orthophoto_compression.clear()
+        self.dlg.cb_orthophoto_bigtiff.clear()
+    
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
@@ -217,6 +215,14 @@ class QODM:
 
         # will be set False in run()
         self.first_start = True
+
+        # clear Widgets
+        self.clear_gui()
+        
+        # populate GUI with default values
+        self.orthophoto_resolution.setValue(5)
+        self.dlg.cb_orthophoto_compression.addItems(["DEFLATE", "PEG", "LZW", "PACKBITS", "LZMA", "NONE"])
+        self.dlg.cb_orthophoto_bigtiff.addItems(["IF_SAFER", "YES", "NO", "IF_NEEDED"])
 
         self.dlg.tb_projdir.clicked.connect(self.select_proj_path)
         self.dlg.tb_gcppath.clicked.connect(self.select_gcp_path)
@@ -294,6 +300,30 @@ class QODM:
     def get_out_crs(self):
         return self.dlg.le_outcrs.text()
 
+    def get_orthophoto_resolution(self):
+        return self.dlg.dbl_orthophoto_resolution.value()
+
+    def get_orthophoto_compression(self):
+        return str(self.dlg.cb_orthophoto_compression.currentText())
+
+    def get_orthophoto_bigtiff(self):
+        return str(self.dlg.cb_orthophoto_bigtiff.currentText())
+
+    def get_orthophoto_fast(self):
+        return self.dlg.ch_orthophoto_fast.isChecked()
+
+    def get_orthophoto_not_tiled(self):
+        return self.dlg.ch_orthophoto_not_tiled.isChecked()
+
+    def get_orthophoto_cutline(self):
+        return self.dlg.ch_orthophoto_cutline.isChecked()
+
+    def get_orthophoto_build_overview(self):
+        return self.dlg.ch_orthophoto_build_orthophoto.isChecked()
+
+    def get_orthophoto_use_3d_mesh(self):
+        return self.dlg.ch_orthophoto_use_ed_mesh.isChecked()
+
     def docker_available(self):
         # execute docker --version to check if docker is running
         try:
@@ -311,8 +341,14 @@ class QODM:
 
         self.out_crs_proj4 = self.get_out_crs()
 
-    def add_VM_mountpoint(self):
-        pass
+        self.orthophoto_resolution = self.get_orthophoto_not_tiled()
+        self.orthophoto_compression = self.get_orthophoto_compression()
+        self.orthophoto_bigtiff = self.get_orthophoto_bigtiff()
+        self.orthophoto_fast = self.get_orthophoto_fast()
+        self.orthophoto_not_tiled = self.get_orthophoto_not_tiled()
+        self.orthophoto_cutline = self.get_orthophoto_cutline()
+        self.orthophoto_build_overview = self.get_orthophoto_build_overview()
+        self.orthophoto_use_3d_mesh = self.get_orthophoto_use_3d_mesh()
 
     def build_command(self):
         # init
