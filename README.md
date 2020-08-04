@@ -60,7 +60,7 @@ Therefore you should at create an empty project folder, in this case *'my_drone_
 
 Open up QGIS and the QODM plugin and select the project folder, in this case 'my_project_folder' as project. Add an optional additional ground control points file and select an output coordinate system. Additionally, you can toggle the desired output products.
 
-![Plugin Run](img/run.png)
+![Plugin Run](img/run.PNG)
 
 In the *'Advanced Settings'* pane, additional fine tuning parameters are supported. A detailed description on all supported parameters and even more flags and options can be found in the [OpenDroneMap Docs](https://docs.opendronemap.org/arguments.html).
 
