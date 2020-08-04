@@ -40,7 +40,7 @@ For 'apply', set *'Overwrite'*, for 'variable' set *'PATH'* and concatenate the 
 
 After downloading the zip file from the QODM [release page](https://github.com/SandroGroth/QODM/releases), you'll be able to install the plugin directly via the QGIS Plugin Manager by selecting the Option *"Install from ZIP"*. Just reference the recently downloaded .zip archive and hit *'Install Plugin'*:
 
-![Plugin Manager](img/install_zip.png)
+![Plugin Manager](img/install_zip.PNG)
 
 After successfully installing the plugin, it should be available under *Plugins > QODM > Process UAV Data*
 
